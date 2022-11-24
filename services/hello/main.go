@@ -22,7 +22,7 @@ func hello(payload []byte) ([]byte, error) {
 	fmt.Printf("hello called, counter = %d\n", counter)
 	_ = make([]byte, 100)
 	// Make a host call to capitalize the name.
-	nameBytes, err := wapc.HostCall("", "example", "capitalize", payload)
+	nameBytes, err := wapc.HostCall("", "", "capitalize", payload)
 	if err != nil {
 		return nil, err
 	}

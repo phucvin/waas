@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/wapc/wapc-go"
@@ -83,25 +82,22 @@ func main() {
 }
 
 func test() {
-	module, err := getModule("hello")
-	check(err)
 	ctx := moduleCtx
+	result, err := invoke(ctx, "hello", []byte("john"))
+	check(err)
+	fmt.Println(string(result))
+}
+
+func invoke(ctx context.Context, moduleName string, payload []byte) ([]byte, error) {
+	module, err := getModule(moduleName)
+	check(err)
 	instance, err := module.Instantiate(ctx)
 	check(err)
 	defer instance.Close(ctx)
 
-	result, err := instance.Invoke(ctx, "hello", []byte("john"))
-	check(err)
-
-	fmt.Println(string(result))
+	return instance.Invoke(ctx, moduleName, payload)
 }
 
 func host(ctx context.Context, binding, namespace, operation string, payload []byte) ([]byte, error) {
-	switch operation {
-	case "capitalize":
-		name := string(payload)
-		name = strings.Title(name)
-		return []byte(name), nil
-	}
-	return nil, fmt.Errorf("operation name not found: %s", operation)
+	return invoke(ctx, operation, payload)
 }
