@@ -32,24 +32,24 @@ func main() {
 	check(err)
 	defer module.Close(ctx)
 
+	instance, err := module.Instantiate(ctx)
+	check(err)
+	defer instance.Close(ctx)
+
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
-		test(ctx, module)
+		test(ctx, instance)
 		wg.Done()
 	}()
 	go func() {
-		test(ctx, module)
+		test(ctx, instance)
 		wg.Done()
 	}()
 	wg.Wait()
 }
 
-func test(ctx context.Context, module wapc.Module) {
-	instance, err := module.Instantiate(ctx)
-	check(err)
-	defer instance.Close(ctx)
-
+func test(ctx context.Context, instance wapc.Instance) {
 	result, err := instance.Invoke(ctx, "hello", []byte("john"))
 	check(err)
 
