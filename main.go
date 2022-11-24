@@ -10,12 +10,6 @@ import (
 	"github.com/wapc/wapc-go/engines/wazero"
 )
 
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 var engine wapc.Engine
 var moduleMapMutex = &sync.RWMutex{}
 var moduleCtx context.Context = context.Background()
@@ -100,4 +94,10 @@ func invoke(ctx context.Context, moduleName string, payload []byte) ([]byte, err
 
 func host(ctx context.Context, binding, namespace, operation string, payload []byte) ([]byte, error) {
 	return invoke(ctx, operation, payload)
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
