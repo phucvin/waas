@@ -8,6 +8,9 @@ import (
 
 	"github.com/wapc/wapc-go"
 	"github.com/wapc/wapc-go/engines/wazero"
+	"karmem.org/golang"
+
+	waaskm "waas/km"
 )
 
 var engine wapc.Engine
@@ -78,13 +81,34 @@ func main() {
 }
 
 func test() {
+	writer := karmem.NewWriter(1024)
+	inv := waaskm.Invocation{
+		Source: waaskm.Source{
+			Name: "test",
+			Location: "global",
+		},
+		Destination: waaskm.Destination{
+			Name: "hello",
+			Location: "global",
+		},
+		Payload: []byte("bob"),
+		Metadata: []waaskm.Metadata{},
+	}
+	_, err := inv.WriteAsRoot(writer);
+	check(err)
+	invBytes := writer.Bytes()
+
 	ctx := moduleCtx
-	result, err := invoke(ctx, "hello", []byte("john"))
+	result, err := invoke(ctx, invBytes)
 	check(err)
 	fmt.Println(string(result))
 }
 
-func invoke(ctx context.Context, moduleName string, payload []byte) ([]byte, error) {
+func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
+	reader := karmem.NewReader(invBytes)
+	inv := waaskm.NewInvocationViewer(reader, 0)
+	moduleName := inv.Destination(reader).Name(reader)
+	
 	module, err := getModule(moduleName)
 	check(err)
 	instance, err := module.Instantiate(ctx)
@@ -92,11 +116,14 @@ func invoke(ctx context.Context, moduleName string, payload []byte) ([]byte, err
 	fmt.Printf("instance initialized: %s\n", moduleName)
 	defer instance.Close(ctx)
 
-	return instance.Invoke(ctx, moduleName, payload)
+	return instance.Invoke(ctx, moduleName, inv.Payload(reader))
 }
 
 func host(ctx context.Context, binding, namespace, operation string, payload []byte) ([]byte, error) {
-	return invoke(ctx, operation, payload)
+	if binding != "" || namespace != "" || operation != "invoke" {
+		return nil, fmt.Errorf("invalid host call, only 'invoke' is supported")
+	}
+	return invoke(ctx, payload)
 }
 
 func check(err error) {

@@ -1,0 +1,23 @@
+karmem waas @packed(true) @golang.package(`waaskm`);
+  
+struct Metadata inline {
+    Key []char;
+    Value []char;
+}
+
+struct Source table {
+    Name []char;
+    Location []char;
+}
+
+struct Destination table {
+    Name []char;
+    Location []char;
+}
+
+struct Invocation table {  
+    Source Source;
+    Destination Destination;
+    Payload []byte;
+    Metadata []Metadata;
+}
