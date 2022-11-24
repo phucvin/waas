@@ -57,8 +57,10 @@ func main() {
 	engine = wazero.Engine()
 	resetModules()
 
+	fmt.Println("loading modules")
 	loadModule("hello")
 	loadModule("capitalize")
+	fmt.Println("2 modules loaded")
 
 	var wg sync.WaitGroup
 	wg.Add(2)
