@@ -15,6 +15,7 @@ func main() {
 	wapc.RegisterFunctions(wapc.Functions{
 		"capitalize": capitalize,
 	})
+	fmt.Println("capitalize.main finished")
 }
 
 // captialize will change the string

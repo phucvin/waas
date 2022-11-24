@@ -89,6 +89,7 @@ func invoke(ctx context.Context, moduleName string, payload []byte) ([]byte, err
 	check(err)
 	instance, err := module.Instantiate(ctx)
 	check(err)
+	fmt.Printf("instance initialized: %s\n", moduleName)
 	defer instance.Close(ctx)
 
 	return instance.Invoke(ctx, moduleName, payload)

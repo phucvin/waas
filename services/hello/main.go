@@ -14,6 +14,7 @@ func main() {
 	wapc.RegisterFunctions(wapc.Functions{
 		"hello": hello,
 	})
+	fmt.Println("hello.main finished")
 }
 
 // hello will callback the host and return the payload
