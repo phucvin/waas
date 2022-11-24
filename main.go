@@ -17,35 +17,75 @@ func check(err error) {
 	}
 }
 
-func main() {
-	engine := wazero.Engine()
-	ctx := context.Background()
+var engine wapc.Engine
+var moduleMapMutex = &sync.RWMutex{}
+var moduleCtx context.Context = context.Background()
+var moduleMap map[string]wapc.Module
 
-	guest, err := os.ReadFile("services/hello/hello.wasm")
+func resetModules() {
+	func() {
+		moduleMapMutex.RLock()
+		defer moduleMapMutex.RUnlock()
+		for _, module := range moduleMap {
+			module.Close(moduleCtx)
+		}
+	}()
+
+	moduleMapMutex.Lock()
+	defer moduleMapMutex.Unlock()
+	moduleMap = make(map[string]wapc.Module)
+}
+
+func loadModule(name string) {
+	wasm, err := os.ReadFile(fmt.Sprintf("services/%s/%s.wasm", name, name))
 	check(err)
-
-	module, err := engine.New(ctx, host, guest, &wapc.ModuleConfig{
+	module, err := engine.New(moduleCtx, host, wasm, &wapc.ModuleConfig{
 		Logger: wapc.PrintlnLogger,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 	})
 	check(err)
-	defer module.Close(ctx)
+
+	moduleMapMutex.Lock()
+	defer moduleMapMutex.Unlock()
+	moduleMap[name] = module
+}
+
+func getModule(name string) (wapc.Module, error) {
+	moduleMapMutex.RLock()
+	defer moduleMapMutex.RUnlock()
+	if module, exist := moduleMap[name]; exist {
+		return module, nil
+	}
+	return nil, fmt.Errorf("module not loaded or not found: %s", name)
+}
+
+func main() {
+	engine = wazero.Engine()
+	resetModules()
+
+	loadModule("hello")
+	loadModule("capitalize")
 
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
-		test(ctx, module)
+		test()
 		wg.Done()
 	}()
 	go func() {
-		test(ctx, module)
+		test()
 		wg.Done()
 	}()
 	wg.Wait()
+
+	resetModules() // close loaded modules
 }
 
-func test(ctx context.Context, module wapc.Module) {
+func test() {
+	module, err := getModule("hello")
+	check(err)
+	ctx := moduleCtx
 	instance, err := module.Instantiate(ctx)
 	check(err)
 	defer instance.Close(ctx)
