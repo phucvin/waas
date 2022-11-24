@@ -21,7 +21,7 @@ func main() {
 	engine := wazero.Engine()
 	ctx := context.Background()
 
-	guest, err := os.ReadFile("services/hello.wasm")
+	guest, err := os.ReadFile("services/hello/hello.wasm")
 	check(err)
 
 	module, err := engine.New(ctx, host, guest, &wapc.ModuleConfig{
