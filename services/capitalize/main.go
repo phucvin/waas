@@ -16,15 +16,15 @@ func main() {
 	counter = 0
 	// Register echo and fail functions
 	wapc.RegisterFunctions(wapc.Functions{
-		"capitalize": capitalize,
+		"capitalize": capitalizeWrapper,
 	})
 	fmt.Println("capitalize.main finished")
 }
 
-func capitalize(invBytes []byte) ([]byte, error) {
+func capitalizeWrapper(invBytes []byte) ([]byte, error) {
 	kmReader := karmem.NewReader(invBytes)
 	inv := waaskm.NewInvocationViewer(kmReader, 0)
-	result, err := capitalizeInternal(string(inv.Payload(kmReader)))
+	result, err := capitalize(string(inv.Payload(kmReader)))
 	if err != nil {
 		return nil, err
 	} else {
@@ -32,8 +32,7 @@ func capitalize(invBytes []byte) ([]byte, error) {
 	}
 }
 
-// captialize will change the string
-func capitalizeInternal(str string) (string, error) {
+func capitalize(str string) (string, error) {
 	counter += 1
 	fmt.Printf("capitalize called, counter = %d\n", counter)
 	return strings.Title(str), nil

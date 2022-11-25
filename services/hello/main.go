@@ -22,19 +22,19 @@ func main() {
 	counter = 0
 	// Register echo and fail functions
 	wapc.RegisterFunctions(wapc.Functions{
-		"hello": hello,
+		"hello": helloWrapper,
 	})
 	fmt.Println("hello.main finished")
 }
 
-func hello(invBytes []byte) ([]byte, error) {
+func helloWrapper(invBytes []byte) ([]byte, error) {
 	kmReader := karmem.NewReader(invBytes)
 	inv := waaskm.NewInvocationViewer(kmReader, 0)
 	location := inv.Destination(kmReader).Location(kmReader)
 	
 	for _, managedScope := range managedScopes {
 		if location == managedScope {
-			result, err := helloInternal(string(inv.Payload(kmReader)))
+			result, err := hello(string(inv.Payload(kmReader)))
 			if err != nil {
 				return nil, err
 			} else {
@@ -45,8 +45,7 @@ func hello(invBytes []byte) ([]byte, error) {
 	return nil, fmt.Errorf("managedScopes: %v; but found: %s", managedScopes, location)
 }
 
-// hello will callback the host and return the payload
-func helloInternal(name string) (string, error) {
+func hello(name string) (string, error) {
 	counter += 1
 	fmt.Printf("hello with managedScopes %v called, counter = %d\n", managedScopes, counter)
 	_ = make([]byte, 100)
