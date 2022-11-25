@@ -96,7 +96,7 @@ func test(helloDestination string) {
 		},
 		Destination: waaskm.Destination{
 			Name: helloDestination,
-			Location: "global",
+			Location: "us-west1",
 		},
 		Payload: []byte("bob"),
 		Metadata: []waaskm.Metadata{},
@@ -107,14 +107,17 @@ func test(helloDestination string) {
 
 	ctx := moduleCtx
 	result, err := invoke(ctx, invBytes)
-	check(err)
-	fmt.Println(string(result))
+	if err != nil {
+		fmt.Printf("test failed: %v\n", err)
+	} else {
+		fmt.Println(string(result))
+	}
 }
 
 func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
-	reader := karmem.NewReader(invBytes)
-	inv := waaskm.NewInvocationViewer(reader, 0)
-	moduleName := inv.Destination(reader).Name(reader)
+	kmReader := karmem.NewReader(invBytes)
+	inv := waaskm.NewInvocationViewer(kmReader, 0)
+	moduleName := inv.Destination(kmReader).Name(kmReader)
 	folderName := strings.Split(moduleName, "-")[0]
 	
 	module, err := getModule(moduleName)
@@ -124,7 +127,7 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 	fmt.Printf("instance initialized: %s\n", moduleName)
 	defer instance.Close(ctx)
 
-	return instance.Invoke(ctx, folderName, inv.Payload(reader))
+	return instance.Invoke(ctx, folderName, invBytes)
 }
 
 func host(ctx context.Context, binding, namespace, operation string, payload []byte) ([]byte, error) {

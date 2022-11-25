@@ -27,8 +27,21 @@ func main() {
 	fmt.Println("hello.main finished")
 }
 
+func hello(invBytes []byte) ([]byte, error) {
+	kmReader := karmem.NewReader(invBytes)
+	inv := waaskm.NewInvocationViewer(kmReader, 0)
+	location := inv.Destination(kmReader).Location(kmReader)
+	
+	for _, managedScope := range managedScopes {
+		if location == managedScope {
+			return helloInternal(inv.Payload(kmReader))
+		}
+	}
+	return nil, fmt.Errorf("managedScopes: %v; but found: %s", location)
+}
+
 // hello will callback the host and return the payload
-func hello(payload []byte) ([]byte, error) {
+func helloInternal(payload []byte) ([]byte, error) {
 	counter += 1
 	fmt.Printf("hello with managedScopes %v called, counter = %d\n", managedScopes, counter)
 	_ = make([]byte, 100)
