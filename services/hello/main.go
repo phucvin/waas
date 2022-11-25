@@ -10,6 +10,7 @@ import (
 )
 
 var counter int32
+var kmWriter *karmem.Writer = karmem.NewWriter(1024)
 
 func main() {
 	counter = 0
@@ -35,7 +36,6 @@ func hello(payload []byte) ([]byte, error) {
 }
 
 func invokeCapitalize(payload []byte) ([]byte, error) {
-	writer := karmem.NewWriter(1024)
 	inv := waaskm.Invocation{
 		Source: waaskm.Source{
 			Name: "hello",
@@ -48,11 +48,12 @@ func invokeCapitalize(payload []byte) ([]byte, error) {
 		Payload: payload,
 		Metadata: []waaskm.Metadata{},
 	}
-	_, err := inv.WriteAsRoot(writer);
+	kmWriter.Reset()
+	_, err := inv.WriteAsRoot(kmWriter);
 	if err != nil {
 		return nil, err
 	}
-	invBytes := writer.Bytes()
+	invBytes := kmWriter.Bytes()
 
 	nameBytes, err := wapc.HostCall("", "", "invoke", invBytes)
 	if err != nil {

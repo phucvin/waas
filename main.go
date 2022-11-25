@@ -18,6 +18,8 @@ var moduleMapMutex = &sync.RWMutex{}
 var moduleCtx context.Context = context.Background()
 var moduleMap map[string]wapc.Module
 
+var kmWriterPool = sync.Pool{New: func() any { return karmem.NewWriter(1024) }}
+
 func resetModules() {
 	func() {
 		moduleMapMutex.RLock()
@@ -81,7 +83,9 @@ func main() {
 }
 
 func test() {
-	writer := karmem.NewWriter(1024)
+	kmWriter := kmWriterPool.Get().(*karmem.Writer)
+	defer kmWriterPool.Put(kmWriter)
+	defer kmWriter.Reset()
 	inv := waaskm.Invocation{
 		Source: waaskm.Source{
 			Name: "test",
@@ -94,9 +98,9 @@ func test() {
 		Payload: []byte("bob"),
 		Metadata: []waaskm.Metadata{},
 	}
-	_, err := inv.WriteAsRoot(writer);
+	_, err := inv.WriteAsRoot(kmWriter);
 	check(err)
-	invBytes := writer.Bytes()
+	invBytes := kmWriter.Bytes()
 
 	ctx := moduleCtx
 	result, err := invoke(ctx, invBytes)
