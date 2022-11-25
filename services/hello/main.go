@@ -7,7 +7,7 @@ import (
 	wapc "github.com/wapc/wapc-guest-tinygo"
 	"karmem.org/golang"
 
-	"hello/waaskm"
+	waaskm "waas/km"
 )
 
 var managedScopesFlag string

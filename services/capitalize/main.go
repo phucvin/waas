@@ -7,7 +7,7 @@ import (
 	wapc "github.com/wapc/wapc-guest-tinygo"
 	"karmem.org/golang"
 
-	"capitalize/waaskm"
+	waaskm "waas/km"
 )
 
 var counter int32
