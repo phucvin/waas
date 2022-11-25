@@ -24,13 +24,17 @@ func main() {
 func capitalize(invBytes []byte) ([]byte, error) {
 	kmReader := karmem.NewReader(invBytes)
 	inv := waaskm.NewInvocationViewer(kmReader, 0)
-	return capitalizeInternal(string(inv.Payload(kmReader)))
+	result, err := capitalizeInternal(string(inv.Payload(kmReader)))
+	if err != nil {
+		return nil, err
+	} else {
+		return []byte(result), nil
+	}
 }
 
 // captialize will change the string
-func capitalizeInternal(str string) ([]byte, error) {
+func capitalizeInternal(str string) (string, error) {
 	counter += 1
 	fmt.Printf("capitalize called, counter = %d\n", counter)
-	_ = make([]byte, 100)
-	return []byte(strings.Title(str)), nil
+	return strings.Title(str), nil
 }

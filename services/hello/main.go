@@ -34,27 +34,32 @@ func hello(invBytes []byte) ([]byte, error) {
 	
 	for _, managedScope := range managedScopes {
 		if location == managedScope {
-			return helloInternal(inv.Payload(kmReader))
+			result, err := helloInternal(string(inv.Payload(kmReader)))
+			if err != nil {
+				return nil, err
+			} else {
+				return []byte(result), nil
+			}
 		}
 	}
 	return nil, fmt.Errorf("managedScopes: %v; but found: %s", managedScopes, location)
 }
 
 // hello will callback the host and return the payload
-func helloInternal(payload []byte) ([]byte, error) {
+func helloInternal(name string) (string, error) {
 	counter += 1
 	fmt.Printf("hello with managedScopes %v called, counter = %d\n", managedScopes, counter)
 	_ = make([]byte, 100)
-	nameBytes, err := invokeCapitalize(payload)
+	capitalized, err := invokeCapitalize(name)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	// Format the message.
-	msg := "Hello, " + string(nameBytes)
-	return []byte(msg), nil
+	msg := fmt.Sprintf("Hello, %s", capitalized)
+	return msg, nil
 }
 
-func invokeCapitalize(payload []byte) ([]byte, error) {
+func invokeCapitalize(str string) (string, error) {
 	inv := waaskm.Invocation{
 		Source: waaskm.Source{
 			Name: "hello",
@@ -64,19 +69,19 @@ func invokeCapitalize(payload []byte) ([]byte, error) {
 			Name: "capitalize",
 			Location: "global",
 		},
-		Payload: payload,
+		Payload: []byte(str),
 		Metadata: []waaskm.Metadata{},
 	}
 	kmWriter.Reset()
 	_, err := inv.WriteAsRoot(kmWriter);
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	invBytes := kmWriter.Bytes()
 
-	nameBytes, err := wapc.HostCall("", "", "invoke", invBytes)
+	resultBytes, err := wapc.HostCall("", "", "invoke", invBytes)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return nameBytes, nil
+	return string(resultBytes), nil
 }
