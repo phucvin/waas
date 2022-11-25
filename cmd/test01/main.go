@@ -49,7 +49,7 @@ func test(name, location string) {
 	check(err)
 	invBytes := kmWriter.Bytes()
 
-	res, err := http.Post("http://localhost:8080", "application/x-binary", bytes.NewBuffer(invBytes))
+	res, err := http.Post("http://localhost:8082", "application/x-binary", bytes.NewBuffer(invBytes))
 	check(err)
 	result, err := ioutil.ReadAll(res.Body)
 	check(err)

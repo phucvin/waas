@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
@@ -131,7 +132,9 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 			}
 		}
 		if !found {
-			return nil, fmt.Errorf("unsupported location: %s", destinationLocation)
+			fmt.Printf("invocationTargetLocation=%s; managedLocations=%v, rerouting\n",
+				destinationLocation, managedLocations)
+			return reroute(invBytes)
 		}
 	}
 
@@ -144,6 +147,35 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 	defer modulePool.Return(instance)
 
 	return instance.Invoke(ctx, folderName, invBytes)
+}
+
+func reroute(invBytes []byte) ([]byte, error) {
+	kmReader := karmem.NewReader(invBytes)
+	inv := waaskm.NewInvocationViewer(kmReader, 0)
+
+	destinationLocation := inv.Destination(kmReader).Location(kmReader)
+	switch destinationLocation {
+	case "us-west1":
+		return post("http://localhost:8081", invBytes)
+	case "us-east1":
+		return post("http://localhost:8082", invBytes)
+	}
+	return nil, fmt.Errorf("unsupported location: %s", destinationLocation)
+}
+
+func post(url string, invBytes []byte) ([]byte, error) {
+	res, err := http.Post(url, "application/x-binary", bytes.NewBuffer(invBytes))
+	if err != nil {
+		return nil, err
+	}
+	result, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("%s", string(result))
+	}
+	return result, err
 }
 
 func host(ctx context.Context, binding, namespace, operation string, payload []byte) ([]byte, error) {
