@@ -31,7 +31,7 @@ func helloWrapper(invBytes []byte) ([]byte, error) {
 	kmReader := karmem.NewReader(invBytes)
 	inv := waaskm.NewInvocationViewer(kmReader, 0)
 	location := inv.Destination(kmReader).Location(kmReader)
-	
+
 	for _, managedScope := range managedScopes {
 		if location == managedScope {
 			result, err := hello(string(inv.Payload(kmReader)))
@@ -61,18 +61,18 @@ func hello(name string) (string, error) {
 func invokeCapitalize(str string) (string, error) {
 	inv := waaskm.Invocation{
 		Source: waaskm.Source{
-			Name: "hello",
+			Name:     "hello",
 			Location: "global",
 		},
 		Destination: waaskm.Destination{
-			Name: "capitalize",
+			Name:     "capitalize",
 			Location: "global",
 		},
-		Payload: []byte(str),
+		Payload:  []byte(str),
 		Metadata: []waaskm.Metadata{},
 	}
 	kmWriter.Reset()
-	_, err := inv.WriteAsRoot(kmWriter);
+	_, err := inv.WriteAsRoot(kmWriter)
 	if err != nil {
 		return "", err
 	}

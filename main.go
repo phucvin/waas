@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
-	"net/http"
 	"io/ioutil"
+	"net/http"
+	"os"
 	"strings"
 	"sync"
 
@@ -103,7 +103,7 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 	inv := waaskm.NewInvocationViewer(kmReader, 0)
 	moduleName := inv.Destination(kmReader).Name(kmReader)
 	folderName := strings.Split(moduleName, "-")[0]
-	
+
 	module, err := getModule(moduleName)
 	check(err)
 	instance, err := module.Instantiate(ctx)

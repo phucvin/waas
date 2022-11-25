@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"net/http"
 	"io/ioutil"
+	"net/http"
 	"sync"
 
 	"karmem.org/golang"
@@ -33,17 +33,17 @@ func test(helloDestination string) {
 	defer kmWriter.Reset()
 	inv := waaskm.Invocation{
 		Source: waaskm.Source{
-			Name: "test01",
+			Name:     "test01",
 			Location: "global",
 		},
 		Destination: waaskm.Destination{
-			Name: helloDestination,
+			Name:     helloDestination,
 			Location: "us-west1",
 		},
-		Payload: []byte("bob"),
+		Payload:  []byte("bob"),
 		Metadata: []waaskm.Metadata{},
 	}
-	_, err := inv.WriteAsRoot(kmWriter);
+	_, err := inv.WriteAsRoot(kmWriter)
 	check(err)
 	invBytes := kmWriter.Bytes()
 
