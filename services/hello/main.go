@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	wapc "github.com/wapc/wapc-guest-tinygo"
 	"karmem.org/golang"
@@ -9,10 +10,15 @@ import (
 	"hello/waaskm"
 )
 
+var managedScopesFlag string
+var managedScopes []string
+
 var counter int32
 var kmWriter *karmem.Writer = karmem.NewWriter(1024)
 
 func main() {
+	managedScopes = strings.Split(managedScopesFlag, ",")
+
 	counter = 0
 	// Register echo and fail functions
 	wapc.RegisterFunctions(wapc.Functions{
@@ -24,7 +30,7 @@ func main() {
 // hello will callback the host and return the payload
 func hello(payload []byte) ([]byte, error) {
 	counter += 1
-	fmt.Printf("hello called, counter = %d\n", counter)
+	fmt.Printf("hello with managedScopes %v called, counter = %d\n", managedScopes, counter)
 	_ = make([]byte, 100)
 	nameBytes, err := invokeCapitalize(payload)
 	if err != nil {

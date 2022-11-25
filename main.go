@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/wapc/wapc-go"
@@ -35,7 +36,8 @@ func resetModules() {
 }
 
 func loadModule(name string) {
-	wasm, err := os.ReadFile(fmt.Sprintf("services/%s/%s.wasm", name, name))
+	folderName := strings.Split(name, "-")[0]
+	wasm, err := os.ReadFile(fmt.Sprintf("services/%s/%s.wasm", folderName, name))
 	check(err)
 	module, err := engine.New(moduleCtx, host, wasm, &wapc.ModuleConfig{
 		Logger: wapc.PrintlnLogger,
@@ -63,18 +65,19 @@ func main() {
 	resetModules()
 
 	fmt.Println("loading modules")
-	loadModule("hello")
+	loadModule("hello-us-west1")
+	loadModule("hello-us-east1")
 	loadModule("capitalize")
-	fmt.Println("2 modules loaded")
+	fmt.Println("3 modules loaded")
 
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
-		test()
+		test("hello-us-west1")
 		wg.Done()
 	}()
 	go func() {
-		test()
+		test("hello-us-east1")
 		wg.Done()
 	}()
 	wg.Wait()
@@ -82,7 +85,7 @@ func main() {
 	resetModules() // close loaded modules
 }
 
-func test() {
+func test(helloDestination string) {
 	kmWriter := kmWriterPool.Get().(*karmem.Writer)
 	defer kmWriterPool.Put(kmWriter)
 	defer kmWriter.Reset()
@@ -92,7 +95,7 @@ func test() {
 			Location: "global",
 		},
 		Destination: waaskm.Destination{
-			Name: "hello",
+			Name: helloDestination,
 			Location: "global",
 		},
 		Payload: []byte("bob"),
@@ -112,6 +115,7 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 	reader := karmem.NewReader(invBytes)
 	inv := waaskm.NewInvocationViewer(reader, 0)
 	moduleName := inv.Destination(reader).Name(reader)
+	folderName := strings.Split(moduleName, "-")[0]
 	
 	module, err := getModule(moduleName)
 	check(err)
@@ -120,7 +124,7 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 	fmt.Printf("instance initialized: %s\n", moduleName)
 	defer instance.Close(ctx)
 
-	return instance.Invoke(ctx, moduleName, inv.Payload(reader))
+	return instance.Invoke(ctx, folderName, inv.Payload(reader))
 }
 
 func host(ctx context.Context, binding, namespace, operation string, payload []byte) ([]byte, error) {
