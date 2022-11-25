@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"flag"
 
 	"github.com/wapc/wapc-go"
 	"github.com/wapc/wapc-go/engines/wazero"
@@ -23,6 +24,8 @@ var moduleCtx context.Context = context.Background()
 var moduleMap map[string]*wapc.Pool
 
 var kmWriterPool = sync.Pool{New: func() any { return karmem.NewWriter(1024) }}
+
+var locations []string
 
 func resetModules() {
 	func() {
@@ -68,18 +71,29 @@ func getModule(name string) (*wapc.Pool, error) {
 }
 
 func main() {
+	locationsFlag := flag.String("locations", "", "Comma separated of locations handled by this server")
+	portFlag := flag.Int("port", 0, "Server port")
+	flag.Parse()
+	locations = strings.Split(*locationsFlag, ",")
+	port := *portFlag
+	if len(locations) == 0 || port == 0 {
+		panic("require locations and port")
+	}
+	fmt.Printf("Starting WAAS server locations=%v port=%d\n", locations, *portFlag)
+
 	engine = wazero.Engine()
 	resetModules()
 
 	fmt.Println("loading modules")
-	loadModule("hello-us-west1")
-	loadModule("hello-us-east1")
+	for _, location := range locations {
+		loadModule(fmt.Sprintf("hello-%s", location))
+	}
 	loadModule("capitalize")
 	fmt.Println("3 modules loaded")
 
 	handler := http.HandlerFunc(handleHTTP)
 	fmt.Println("Listening...")
-	http.ListenAndServe(":8080", handler)
+	http.ListenAndServe(fmt.Sprintf(":%d", *portFlag), handler)
 
 	resetModules() // close loaded modules
 }
