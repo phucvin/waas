@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/wapc/wapc-go"
 	"github.com/wapc/wapc-go/engines/wazero"
@@ -19,7 +20,7 @@ import (
 var engine wapc.Engine
 var moduleMapMutex = &sync.RWMutex{}
 var moduleCtx context.Context = context.Background()
-var moduleMap map[string]wapc.Module
+var moduleMap map[string]*wapc.Pool
 
 var kmWriterPool = sync.Pool{New: func() any { return karmem.NewWriter(1024) }}
 
@@ -34,7 +35,7 @@ func resetModules() {
 
 	moduleMapMutex.Lock()
 	defer moduleMapMutex.Unlock()
-	moduleMap = make(map[string]wapc.Module)
+	moduleMap = make(map[string]*wapc.Pool)
 }
 
 func loadModule(name string) {
@@ -48,12 +49,16 @@ func loadModule(name string) {
 	})
 	check(err)
 
+	pool, err := wapc.NewPool(moduleCtx, module, 2, func(instance wapc.Instance) error {
+		return nil
+	})
+
 	moduleMapMutex.Lock()
 	defer moduleMapMutex.Unlock()
-	moduleMap[name] = module
+	moduleMap[name] = pool
 }
 
-func getModule(name string) (wapc.Module, error) {
+func getModule(name string) (*wapc.Pool, error) {
 	moduleMapMutex.RLock()
 	defer moduleMapMutex.RUnlock()
 	if module, exist := moduleMap[name]; exist {
@@ -104,12 +109,11 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 	moduleName := inv.Destination(kmReader).Name(kmReader)
 	folderName := strings.Split(moduleName, "-")[0]
 
-	module, err := getModule(moduleName)
+	modulePool, err := getModule(moduleName)
 	check(err)
-	instance, err := module.Instantiate(ctx)
+	instance, err := modulePool.Get(5 * time.Millisecond)
 	check(err)
-	fmt.Printf("instance initialized: %s\n", moduleName)
-	defer instance.Close(ctx)
+	defer modulePool.Return(instance)
 
 	return instance.Invoke(ctx, folderName, invBytes)
 }

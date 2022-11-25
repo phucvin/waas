@@ -15,15 +15,17 @@ var kmWriterPool = sync.Pool{New: func() any { return karmem.NewWriter(1024) }}
 
 func main() {
 	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		test("hello-us-west1")
-		wg.Done()
-	}()
-	go func() {
-		test("hello-us-east1")
-		wg.Done()
-	}()
+	wg.Add(10)
+	for i := 0; i < 5; i++ {
+		go func() {
+			test("hello-us-west1")
+			wg.Done()
+		}()
+		go func() {
+			test("hello-us-east1")
+			wg.Done()
+		}()
+	}
 	wg.Wait()
 }
 
