@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"net/http"
+	"io/ioutil"
 	"strings"
 	"sync"
 
@@ -70,47 +72,29 @@ func main() {
 	loadModule("capitalize")
 	fmt.Println("3 modules loaded")
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		test("hello-us-west1")
-		wg.Done()
-	}()
-	go func() {
-		test("hello-us-east1")
-		wg.Done()
-	}()
-	wg.Wait()
+	handler := http.HandlerFunc(handleHTTP)
+	fmt.Println("Listening...")
+	http.ListenAndServe(":8080", handler)
 
 	resetModules() // close loaded modules
 }
 
-func test(helloDestination string) {
-	kmWriter := kmWriterPool.Get().(*karmem.Writer)
-	defer kmWriterPool.Put(kmWriter)
-	defer kmWriter.Reset()
-	inv := waaskm.Invocation{
-		Source: waaskm.Source{
-			Name: "test",
-			Location: "global",
-		},
-		Destination: waaskm.Destination{
-			Name: helloDestination,
-			Location: "us-west1",
-		},
-		Payload: []byte("bob"),
-		Metadata: []waaskm.Metadata{},
-	}
-	_, err := inv.WriteAsRoot(kmWriter);
-	check(err)
-	invBytes := kmWriter.Bytes()
-
-	ctx := moduleCtx
-	result, err := invoke(ctx, invBytes)
+func handleHTTP(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	reqBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		fmt.Printf("test failed: %v\n", err)
-	} else {
-		fmt.Println(string(result))
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "error: %v", err)
+	}
+	resBytes, err := invoke(ctx, reqBytes)
+	if err != nil {
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "error: %v", err)
+	}
+	_, err = w.Write(resBytes)
+	if err != nil {
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "error: %v", err)
 	}
 }
 
