@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -9,7 +10,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"flag"
 
 	"github.com/wapc/wapc-go"
 	"github.com/wapc/wapc-go/engines/wazero"
@@ -25,7 +25,7 @@ var moduleMap map[string]*wapc.Pool
 
 var kmWriterPool = sync.Pool{New: func() any { return karmem.NewWriter(1024) }}
 
-var locations []string
+var managedLocations []string
 
 func resetModules() {
 	func() {
@@ -74,19 +74,19 @@ func main() {
 	locationsFlag := flag.String("locations", "", "Comma separated of locations handled by this server")
 	portFlag := flag.Int("port", 0, "Server port")
 	flag.Parse()
-	locations = strings.Split(*locationsFlag, ",")
+	managedLocations = strings.Split(*locationsFlag, ",")
 	port := *portFlag
-	if len(locations) == 0 || port == 0 {
+	if len(managedLocations) == 0 || port == 0 {
 		panic("require locations and port")
 	}
-	fmt.Printf("Starting WAAS server locations=%v port=%d\n", locations, *portFlag)
+	fmt.Printf("Starting WAAS server managedLocations=%v port=%d\n", managedLocations, *portFlag)
 
 	engine = wazero.Engine()
 	resetModules()
 
 	fmt.Println("loading modules")
-	for _, location := range locations {
-		loadModule(fmt.Sprintf("hello-%s", location))
+	for _, managedLocation := range managedLocations {
+		loadModule(fmt.Sprintf("hello-%s", managedLocation))
 	}
 	loadModule("capitalize")
 	fmt.Println("3 modules loaded")
@@ -120,9 +120,23 @@ func handleHTTP(w http.ResponseWriter, req *http.Request) {
 func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 	kmReader := karmem.NewReader(invBytes)
 	inv := waaskm.NewInvocationViewer(kmReader, 0)
+
+	destinationLocation := inv.Destination(kmReader).Location(kmReader)
+	if destinationLocation != "anywhere" {
+		found := false
+		for _, managedLocation := range managedLocations {
+			if destinationLocation == managedLocation {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, fmt.Errorf("unsupported location: %s", destinationLocation)
+		}
+	}
+
 	moduleName := inv.Destination(kmReader).Name(kmReader)
 	folderName := strings.Split(moduleName, "-")[0]
-
 	modulePool, err := getModule(moduleName)
 	check(err)
 	instance, err := modulePool.Get(5 * time.Millisecond)

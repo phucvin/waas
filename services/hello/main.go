@@ -66,7 +66,7 @@ func invokeCapitalize(str string) (string, error) {
 		},
 		Destination: waaskm.Destination{
 			Name:     "capitalize",
-			Location: "global",
+			Location: "anywhere",
 		},
 		Payload:  []byte(str),
 		Metadata: []waaskm.Metadata{},

@@ -18,18 +18,18 @@ func main() {
 	wg.Add(10)
 	for i := 0; i < 5; i++ {
 		go func() {
-			test("hello-us-west1")
+			test("hello-us-west1", "us-west1")
 			wg.Done()
 		}()
 		go func() {
-			test("hello-us-east1")
+			test("hello-us-east1", "us-east1")
 			wg.Done()
 		}()
 	}
 	wg.Wait()
 }
 
-func test(helloDestination string) {
+func test(name, location string) {
 	kmWriter := kmWriterPool.Get().(*karmem.Writer)
 	defer kmWriterPool.Put(kmWriter)
 	defer kmWriter.Reset()
@@ -39,8 +39,8 @@ func test(helloDestination string) {
 			Location: "global",
 		},
 		Destination: waaskm.Destination{
-			Name:     helloDestination,
-			Location: "us-west1",
+			Name:     name,
+			Location: location,
 		},
 		Payload:  []byte("bob"),
 		Metadata: []waaskm.Metadata{},
