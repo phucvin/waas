@@ -37,7 +37,7 @@ func hello(invBytes []byte) ([]byte, error) {
 			return helloInternal(inv.Payload(kmReader))
 		}
 	}
-	return nil, fmt.Errorf("managedScopes: %v; but found: %s", location)
+	return nil, fmt.Errorf("managedScopes: %v; but found: %s", managedScopes, location)
 }
 
 // hello will callback the host and return the payload
