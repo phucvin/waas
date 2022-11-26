@@ -10,3 +10,5 @@ go run main.go --locations=us-west1 --port=8081
 go run main.go --locations=us-east1 --port=8082
 
 go run cmd/test01/main.go
+
+go run cmd/test02/main.go --n=100

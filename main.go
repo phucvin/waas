@@ -101,6 +101,7 @@ func main() {
 }
 
 func handleHTTP(w http.ResponseWriter, req *http.Request) {
+	start := time.Now()
 	ctx := req.Context()
 	reqBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -117,6 +118,8 @@ func handleHTTP(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "error: %v", err)
 	}
+	duration := time.Since(start)
+	fmt.Printf("handleHTTP took %v\n", duration)
 }
 
 func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {

@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"sync"
+	"time"
 
 	"karmem.org/golang"
 	waaskm "waas/km"
@@ -14,10 +16,15 @@ import (
 var kmWriterPool = sync.Pool{New: func() any { return karmem.NewWriter(1024) }}
 
 func main() {
-	test()
+	n := flag.Int("n", 1, "")
+	flag.Parse()
+	start := time.Now()
+	test(*n)
+	duration := time.Since(start)
+	fmt.Printf("test took %v\n", duration)
 }
 
-func test() {
+func test(n int) {
 	kmWriter := kmWriterPool.Get().(*karmem.Writer)
 	defer kmWriterPool.Put(kmWriter)
 	defer kmWriter.Reset()
@@ -30,7 +37,7 @@ func test() {
 			Name:     "ping",
 			Location: "anywhere",
 		},
-		Payload:  []byte{99},
+		Payload:  []byte{byte(n)},
 		Metadata: []waaskm.Metadata{},
 	}
 	_, err := inv.WriteAsRoot(kmWriter)
