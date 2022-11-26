@@ -12,3 +12,7 @@ go run main.go --locations=us-east1 --port=8082
 go run cmd/test01/main.go
 
 go run cmd/test02/main.go --n=100
+
+go build -o bin/test02 cmd/test02/main.go
+
+for run in {1..10000}; do bin/test02 --n=100; done
