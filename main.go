@@ -31,7 +31,6 @@ var kmWriterPool = sync.Pool{New: func() any { return karmem.NewWriter(1024) }}
 var managedLocations []string
 
 func resetModules() {
-	wait.Handle()
 	func() {
 		moduleMapMutex.RLock()
 		defer moduleMapMutex.RUnlock()
@@ -129,7 +128,15 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 	kmReader := karmem.NewReader(invBytes)
 	inv := waaskm.NewInvocationViewer(kmReader, 0)
 
+	destinationName := inv.Destination(kmReader).Name(kmReader)
 	destinationLocation := inv.Destination(kmReader).Location(kmReader)
+	if (strings.HasPrefix(destinationName, "_")) {
+		if destinationLocation != "anywhere" {
+			return nil, fmt.Errorf("capability '%s' location must be 'anywhere'", destinationName)
+		}
+		return invokeCapability(kmReader, inv)
+	}
+
 	if destinationLocation != "anywhere" {
 		found := false
 		for _, managedLocation := range managedLocations {
@@ -145,7 +152,7 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 		}
 	}
 
-	moduleName := inv.Destination(kmReader).Name(kmReader)
+	moduleName := destinationName
 	folderName := strings.Split(moduleName, "-")[0]
 	modulePool, err := getModule(moduleName)
 	check(err)
@@ -155,6 +162,15 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 
 	// fmt.Printf("invoking %s\n", folderName)
 	return instance.Invoke(ctx, folderName, invBytes)
+}
+
+func invokeCapability(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]byte, error) {
+	capabilityName := inv.Destination(kmReader).Name(kmReader)
+	switch (capabilityName) {
+	case "_wait":
+		return wait.Handle(kmReader, inv)
+	}
+	return nil, fmt.Errorf("capability %s not implemented", capabilityName)
 }
 
 func reroute(invBytes []byte) ([]byte, error) {

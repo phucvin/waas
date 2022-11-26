@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strings"
 
@@ -49,6 +50,10 @@ func hello(name string) (string, error) {
 	counter += 1
 	fmt.Printf("hello with managedScopes %v called, counter = %d\n", managedScopes, counter)
 	_ = make([]byte, 100)
+	err := invokeWait(1000 /* milliseconds */)
+	if err != nil {
+		return "", err
+	}
 	capitalized, err := invokeCapitalize(name)
 	if err != nil {
 		return "", err
@@ -83,4 +88,30 @@ func invokeCapitalize(str string) (string, error) {
 		return "", err
 	}
 	return string(resultBytes), nil
+}
+
+func invokeWait(milliseconds uint32) error {
+	millisecondsBytes := make([]byte, 4)
+    binary.LittleEndian.PutUint32(millisecondsBytes, milliseconds)
+	inv := waaskm.Invocation{
+		Source: waaskm.Source{
+			Name:     "hello",
+			Location: "global",
+		},
+		Destination: waaskm.Destination{
+			Name:     "_wait",
+			Location: "anywhere",
+		},
+		Payload:  millisecondsBytes,
+		Metadata: []waaskm.Metadata{},
+	}
+	kmWriter.Reset()
+	_, err := inv.WriteAsRoot(kmWriter)
+	if err != nil {
+		return  err
+	}
+	invBytes := kmWriter.Bytes()
+
+	_, err = wapc.HostCall("", "", "invoke", invBytes)
+	return err
 }
