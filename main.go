@@ -17,6 +17,8 @@ import (
 	"karmem.org/golang"
 
 	waaskm "waas/km"
+
+	"waas/capabilities/wait"
 )
 
 var engine wapc.Engine
@@ -29,6 +31,7 @@ var kmWriterPool = sync.Pool{New: func() any { return karmem.NewWriter(1024) }}
 var managedLocations []string
 
 func resetModules() {
+	wait.Handle()
 	func() {
 		moduleMapMutex.RLock()
 		defer moduleMapMutex.RUnlock()

@@ -3,8 +3,10 @@ module waas
 go 1.19
 
 replace waas/km => ./km
+replace waas/capabilities/wait => ./capabilities/wait
 
 require waas/km v0.0.0
+require waas/capabilities/wait v0.0.0
 
 require (
 	github.com/wapc/wapc-go v0.5.5
