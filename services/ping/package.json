@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@wapc/as-guest": "0.3.1"
+    "@wapc/as-guest": "0.3.1",
+    "karmem": "1.0.4"
   }
 }

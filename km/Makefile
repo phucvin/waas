@@ -1,2 +1,2 @@
 build:
-	go run karmem.org/cmd/karmem build --golang -o . waas.km
+	go run karmem.org/cmd/karmem build --golang --assemblyscript -o . waas.km

@@ -30,7 +30,7 @@ func test() {
 			Name:     "ping",
 			Location: "anywhere",
 		},
-		Payload:  []byte(""),
+		Payload:  []byte{255},
 		Metadata: []waaskm.Metadata{},
 	}
 	_, err := inv.WriteAsRoot(kmWriter)
@@ -41,7 +41,7 @@ func test() {
 	check(err)
 	result, err := ioutil.ReadAll(res.Body)
 	check(err)
-	fmt.Printf("%s: %s\n", res.Status, string(result))
+	fmt.Printf("%s: %v\n", res.Status, result)
 }
 
 func check(err error) {
