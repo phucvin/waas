@@ -58,12 +58,6 @@ func hello(name string) (string, error) {
 		}
 		waitTokens[i] = waitToken
 	}
-	for i := 0; i < len(waitTokens); i += 1 {
-		_, err := awaitWait(waitTokens[i])
-		if err != nil {
-			return "", err
-		}
-	}
 
 	capitalized, err := invokeCapitalize(name)
 	if err != nil {
@@ -71,6 +65,14 @@ func hello(name string) (string, error) {
 	}
 	// Format the message.
 	msg := fmt.Sprintf("Hello, %s", capitalized)
+
+	for i := 0; i < len(waitTokens); i += 1 {
+		_, err := awaitWait(waitTokens[i])
+		if err != nil {
+			return "", err
+		}
+	}
+
 	return msg, nil
 }
 
