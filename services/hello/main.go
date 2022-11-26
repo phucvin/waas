@@ -50,9 +50,9 @@ func hello(name string) (string, error) {
 	counter += 1
 	fmt.Printf("hello with managedScopes %v called, counter = %d\n", managedScopes, counter)
 
-	waitTokens := make([]byte, 100)
+	waitTokens := make([][]byte, 100)
 	for i := 0; i < len(waitTokens); i += 1 {
-		waitToken, err := asyncWait(1000 /* milliseconds */)
+		waitToken, err := asyncWait(100 /* milliseconds */)
 		if err != nil {
 			return "", err
 		}
@@ -127,7 +127,7 @@ func invokeWait(milliseconds uint32) error {
 	return err
 }
 
-func asyncWait(milliseconds uint32) (byte, error) {
+func asyncWait(milliseconds uint32) ([]byte, error) {
 	millisecondsBytes := make([]byte, 4)
     binary.LittleEndian.PutUint32(millisecondsBytes, milliseconds)
 	inv := waaskm.Invocation{
@@ -145,21 +145,15 @@ func asyncWait(milliseconds uint32) (byte, error) {
 	kmWriter.Reset()
 	_, err := inv.WriteAsRoot(kmWriter)
 	if err != nil {
-		return  0, err
+		return  nil, err
 	}
 	invBytes := kmWriter.Bytes()
 
 	tokenBytes, err := wapc.HostCall("", "", "invoke", invBytes)
-	if err != nil {
-		return 0, err
-	} else if len(tokenBytes) != 1 {
-		return 0, fmt.Errorf("invalid token returned from _async_wait: %v", tokenBytes)
-	} else {
-		return tokenBytes[0], nil
-	}
+	return tokenBytes, err
 }
 
-func awaitWait(token byte) ([]byte, error) {
+func awaitWait(token []byte) ([]byte, error) {
 	inv := waaskm.Invocation{
 		Source: waaskm.Source{
 			Name:     "hello",
@@ -169,7 +163,7 @@ func awaitWait(token byte) ([]byte, error) {
 			Name:     "_await_wait",
 			Location: "anywhere",
 		},
-		Payload:  []byte{token},
+		Payload:  token,
 		Metadata: []waaskm.Metadata{},
 	}
 	kmWriter.Reset()
