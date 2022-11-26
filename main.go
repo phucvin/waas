@@ -31,6 +31,9 @@ var kmWriterPool = sync.Pool{New: func() any { return karmem.NewWriter(1024) }}
 var managedLocations []string
 
 func resetModules() {
+	// Reset capabilities first
+	wait.Reset()
+	
 	func() {
 		moduleMapMutex.RLock()
 		defer moduleMapMutex.RUnlock()
@@ -169,6 +172,10 @@ func invokeCapability(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]
 	switch (capabilityName) {
 	case "_wait":
 		return wait.Handle(kmReader, inv)
+	case "_async_wait":
+		return wait.HandleAsync(kmReader, inv)
+	case "_await_wait":
+		return wait.HandleAwait(kmReader, inv)
 	}
 	return nil, fmt.Errorf("capability %s not implemented", capabilityName)
 }

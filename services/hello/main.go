@@ -49,11 +49,22 @@ func helloWrapper(invBytes []byte) ([]byte, error) {
 func hello(name string) (string, error) {
 	counter += 1
 	fmt.Printf("hello with managedScopes %v called, counter = %d\n", managedScopes, counter)
-	_ = make([]byte, 100)
-	err := invokeWait(1000 /* milliseconds */)
-	if err != nil {
-		return "", err
+
+	waitTokens := make([]byte, 100)
+	for i := 0; i < len(waitTokens); i += 1 {
+		waitToken, err := asyncWait(1000 /* milliseconds */)
+		if err != nil {
+			return "", err
+		}
+		waitTokens[i] = waitToken
 	}
+	for i := 0; i < len(waitTokens); i += 1 {
+		_, err := awaitWait(waitTokens[i])
+		if err != nil {
+			return "", err
+		}
+	}
+
 	capitalized, err := invokeCapitalize(name)
 	if err != nil {
 		return "", err
@@ -114,4 +125,59 @@ func invokeWait(milliseconds uint32) error {
 
 	_, err = wapc.HostCall("", "", "invoke", invBytes)
 	return err
+}
+
+func asyncWait(milliseconds uint32) (byte, error) {
+	millisecondsBytes := make([]byte, 4)
+    binary.LittleEndian.PutUint32(millisecondsBytes, milliseconds)
+	inv := waaskm.Invocation{
+		Source: waaskm.Source{
+			Name:     "hello",
+			Location: "global",
+		},
+		Destination: waaskm.Destination{
+			Name:     "_async_wait",
+			Location: "anywhere",
+		},
+		Payload:  millisecondsBytes,
+		Metadata: []waaskm.Metadata{},
+	}
+	kmWriter.Reset()
+	_, err := inv.WriteAsRoot(kmWriter)
+	if err != nil {
+		return  0, err
+	}
+	invBytes := kmWriter.Bytes()
+
+	tokenBytes, err := wapc.HostCall("", "", "invoke", invBytes)
+	if err != nil {
+		return 0, err
+	} else if len(tokenBytes) != 1 {
+		return 0, fmt.Errorf("invalid token returned from _async_wait: %v", tokenBytes)
+	} else {
+		return tokenBytes[0], nil
+	}
+}
+
+func awaitWait(token byte) ([]byte, error) {
+	inv := waaskm.Invocation{
+		Source: waaskm.Source{
+			Name:     "hello",
+			Location: "global",
+		},
+		Destination: waaskm.Destination{
+			Name:     "_await_wait",
+			Location: "anywhere",
+		},
+		Payload:  []byte{token},
+		Metadata: []waaskm.Metadata{},
+	}
+	kmWriter.Reset()
+	_, err := inv.WriteAsRoot(kmWriter)
+	if err != nil {
+		return  nil, err
+	}
+	invBytes := kmWriter.Bytes()
+
+	return wapc.HostCall("", "", "invoke", invBytes)
 }
