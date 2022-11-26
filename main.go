@@ -53,7 +53,7 @@ func loadModule(name string) {
 	})
 	check(err)
 
-	pool, err := wapc.NewPool(moduleCtx, module, 2, func(instance wapc.Instance) error {
+	pool, err := wapc.NewPool(moduleCtx, module, 100, func(instance wapc.Instance) error {
 		return nil
 	})
 
@@ -147,7 +147,6 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 	check(err)
 	defer modulePool.Return(instance)
 
-	fmt.Printf("invoking %s\n", folderName)
 	return instance.Invoke(ctx, folderName, invBytes)
 }
 

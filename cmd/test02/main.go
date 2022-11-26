@@ -30,7 +30,7 @@ func test() {
 			Name:     "ping",
 			Location: "anywhere",
 		},
-		Payload:  []byte{2},
+		Payload:  []byte{100},
 		Metadata: []waaskm.Metadata{},
 	}
 	_, err := inv.WriteAsRoot(kmWriter)
