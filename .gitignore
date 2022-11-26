@@ -1,2 +1,3 @@
 *.wasm
 *_generated.go
+node_modules

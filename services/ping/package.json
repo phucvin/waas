@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@wapc/as-guest": "0.3.1"
+  }
+}
