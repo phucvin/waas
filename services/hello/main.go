@@ -50,7 +50,7 @@ func hello(name string) (string, error) {
 	counter += 1
 	fmt.Printf("hello with managedScopes %v called, counter = %d\n", managedScopes, counter)
 
-	waitTokens := make([][]byte, 100)
+	waitTokens := make([][]byte, 100000)
 	for i := 0; i < len(waitTokens); i += 1 {
 		waitToken, err := asyncWait(100 /* milliseconds */)
 		if err != nil {

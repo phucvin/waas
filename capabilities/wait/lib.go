@@ -5,17 +5,18 @@ import (
 	"fmt"
 	"time"
 	"sync"
+	"sync/atomic"
 	
 	"karmem.org/golang"
 	waaskm "waas/km"
 )
 
-var tokenMap map[byte]*sync.WaitGroup
-var nextToken byte
+var tokenMap *sync.Map
+var nextToken uint64
 
 func Reset() {
-	tokenMap = make(map[byte]*sync.WaitGroup)
-	nextToken = 1
+	tokenMap = &sync.Map{}
+	nextToken = 0
 }
 
 func Handle(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]byte, error) {
@@ -40,23 +41,19 @@ func HandleAsync(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]byte,
 		time.Sleep(time.Duration(milliseconds) * time.Millisecond)
 		wg.Done()
 	}()
-	token := nextToken
-	nextToken = nextToken + 1
-	tokenMap[token] = &wg
-	return []byte{token}, nil
+	token := atomic.AddUint64(&nextToken, 1)
+	tokenMap.Store(token, &wg)
+	tokenBytes := make([]byte, 8)
+    binary.LittleEndian.PutUint64(tokenBytes, token)
+	return tokenBytes, nil
 }
 
 func HandleAwait(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]byte, error) {
-	payload := inv.Payload(kmReader)
-	if len(payload) != 1 {
-		return nil, fmt.Errorf("invalid token sent to _await_wait: %v", payload)
-	}
-	token := payload[0]
-	wg, ok := tokenMap[token]
+	token := binary.LittleEndian.Uint64(inv.Payload(kmReader))
+	wg, ok := tokenMap.LoadAndDelete(token)
 	if !ok {
 		return nil, fmt.Errorf("token not found while handling _await_wait: %v", token)
 	}
-	wg.Wait()
-	delete(tokenMap, token)
+	wg.(*sync.WaitGroup).Wait()
 	return []byte{}, nil
 }
