@@ -90,7 +90,8 @@ func main() {
 		loadModule(fmt.Sprintf("hello-%s", managedLocation))
 	}
 	loadModule("capitalize")
-	fmt.Println("3 modules loaded")
+	loadModule("ping")
+	fmt.Println("modules loaded")
 
 	handler := http.HandlerFunc(handleHTTP)
 	fmt.Println("Listening...")
