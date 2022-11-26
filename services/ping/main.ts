@@ -24,6 +24,10 @@ function pingWrapper(payload: ArrayBuffer): Result<ArrayBuffer> {
 }
 
 function ping(countLeft: u8): Result<u8> {
+  if (countLeft <= 1 ) {
+    return Result.ok<u8>(0);
+  }
+
   return Result.ok(countLeft - 1);
 }
 
