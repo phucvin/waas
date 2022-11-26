@@ -3,6 +3,7 @@ module waas
 go 1.19
 
 replace waas/km => ./km
+
 require waas/km v0.0.0
 
 require (
