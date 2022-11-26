@@ -8,6 +8,8 @@ import {
 import * as karmem from "karmem/assemblyscript/karmem.ts";
 import * as waaskm from "../../km/waas_generated.ts";
 
+const kmWriter = karmem.NewWriter(1024);
+
 register("ping", pingWrapper);
 
 function pingWrapper(payload: ArrayBuffer): Result<ArrayBuffer> {
@@ -28,7 +30,29 @@ function ping(countLeft: u8): Result<u8> {
     return Result.ok<u8>(0);
   }
 
-  return Result.ok(countLeft - 1);
+  return invokePong(countLeft - 1);
+}
+
+function invokePong(countLeft: u8): Result<u8> {
+  let inv = waaskm.NewInvocation();
+  inv.Source.Name = "ping";
+  inv.Source.Location = "global";
+  inv.Destination.Name = "ping";
+  inv.Destination.Location = "anywhere";
+  inv.Payload = new Array<u8>(1);
+  inv.Payload[0] = countLeft;
+  kmWriter.Reset();
+  let writeOk = waaskm.Invocation.Write(inv, kmWriter, 0);
+	if (!writeOk) {
+    return Result.error<u8>(new Error("write failed"));
+	}
+
+  let result = hostCall("", "", "invoke", kmWriter.Bytes().buffer);
+  if (result.isOk) {
+    return Result.ok<u8>(Uint8Array.wrap(result.get())[0]);
+  } else {
+    return Result.error<u8>(changetype<Error>(result.error()));
+  }
 }
 
 // This must be present in the entry file. Do not remove.

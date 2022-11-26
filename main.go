@@ -147,6 +147,7 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 	check(err)
 	defer modulePool.Return(instance)
 
+	fmt.Printf("invoking %s\n", folderName)
 	return instance.Invoke(ctx, folderName, invBytes)
 }
 
