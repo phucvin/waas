@@ -18,7 +18,7 @@ func main() {
 	wapc.RegisterFunctions(wapc.Functions{
 		"capitalize": capitalizeWrapper,
 	})
-	fmt.Println("capitalize.main finished")
+	// fmt.Println("capitalize.main finished")
 }
 
 func capitalizeWrapper(invBytes []byte) ([]byte, error) {

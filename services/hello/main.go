@@ -24,7 +24,7 @@ func main() {
 	wapc.RegisterFunctions(wapc.Functions{
 		"hello": helloWrapper,
 	})
-	fmt.Println("hello.main finished")
+	// fmt.Println("hello.main finished")
 }
 
 func helloWrapper(invBytes []byte) ([]byte, error) {
