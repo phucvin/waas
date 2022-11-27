@@ -163,6 +163,7 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 	check(err)
 	defer modulePool.Return(instance)
 
+	// fmt.Printf("instance has memory size: %d\n", instance.MemorySize(ctx))
 	// fmt.Printf("invoking %s\n", folderName)
 	return instance.Invoke(ctx, folderName, invBytes)
 }
