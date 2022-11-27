@@ -15,12 +15,14 @@ var managedScopesFlag string
 var managedScopes []string
 
 var counter int32
-var kmWriter *karmem.Writer = karmem.NewWriter(1024)
+var kmWriter *karmem.Writer
 
 func main() {
 	managedScopes = strings.Split(managedScopesFlag, ",")
 
 	counter = 0
+	kmWriter = karmem.NewWriter(1024)
+
 	// Register echo and fail functions
 	wapc.RegisterFunctions(wapc.Functions{
 		"hello": helloWrapper,
