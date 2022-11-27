@@ -24,7 +24,7 @@ import (
 var engine wapc.Engine
 var moduleMapMutex = &sync.RWMutex{}
 var moduleCtx context.Context = context.Background()
-var moduleMap map[string]*wapc.Pool
+var moduleMap map[string]wapc.Module
 
 var kmWriterPool = sync.Pool{New: func() any { return karmem.NewWriter(1024) }}
 
@@ -44,7 +44,7 @@ func resetModules() {
 
 	moduleMapMutex.Lock()
 	defer moduleMapMutex.Unlock()
-	moduleMap = make(map[string]*wapc.Pool)
+	moduleMap = make(map[string]wapc.Module)
 }
 
 func loadModule(name string) {
@@ -58,16 +58,12 @@ func loadModule(name string) {
 	})
 	check(err)
 
-	pool, err := wapc.NewPool(moduleCtx, module, 101, func(instance wapc.Instance) error {
-		return nil
-	})
-
 	moduleMapMutex.Lock()
 	defer moduleMapMutex.Unlock()
-	moduleMap[name] = pool
+	moduleMap[name] = module
 }
 
-func getModule(name string) (*wapc.Pool, error) {
+func getModule(name string) (wapc.Module, error) {
 	moduleMapMutex.RLock()
 	defer moduleMapMutex.RUnlock()
 	if module, exist := moduleMap[name]; exist {
@@ -157,13 +153,12 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 
 	moduleName := destinationName
 	folderName := strings.Split(moduleName, "-")[0]
-	modulePool, err := getModule(moduleName)
+	module, err := getModule(moduleName)
 	check(err)
-	instance, err := modulePool.Get(5 * time.Millisecond)
+	instance, err := module.Instantiate(ctx)
 	check(err)
-	defer modulePool.Return(instance)
 
-	// fmt.Printf("instance has memory size: %d\n", instance.MemorySize(ctx))
+	fmt.Printf("instance has memory size: %d\n", instance.MemorySize(ctx))
 	// fmt.Printf("invoking %s\n", folderName)
 	return instance.Invoke(ctx, folderName, invBytes)
 }

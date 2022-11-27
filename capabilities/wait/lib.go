@@ -42,6 +42,9 @@ func HandleAsync(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]byte,
 		wg.Done()
 	}()
 	token := atomic.AddUint64(&nextToken, 1)
+	if token % 5000 == 0 {
+		fmt.Printf("wait token reached %d\n", token)
+	}
 	tokenMap.Store(token, &wg)
 	tokenBytes := make([]byte, 8)
     binary.LittleEndian.PutUint64(tokenBytes, token)
@@ -50,6 +53,9 @@ func HandleAsync(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]byte,
 
 func HandleAwait(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]byte, error) {
 	token := binary.LittleEndian.Uint64(inv.Payload(kmReader))
+	if token % 5000 == 0 {
+		fmt.Printf("awaiting token %d\n", token)
+	}
 	wg, ok := tokenMap.LoadAndDelete(token)
 	if !ok {
 		return nil, fmt.Errorf("token not found while handling _await_wait: %v", token)
