@@ -158,9 +158,11 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 	instance, err := module.Instantiate(ctx)
 	check(err)
 
-	fmt.Printf("instance has memory size: %d\n", instance.MemorySize(ctx))
+	// fmt.Printf("instance memory bytes before invoking: %d\n", instance.MemorySize(ctx))
 	// fmt.Printf("invoking %s\n", folderName)
-	return instance.Invoke(ctx, folderName, invBytes)
+	result, err := instance.Invoke(ctx, folderName, invBytes)
+	// fmt.Printf("instance memory bytes after invoking: %d\n", instance.MemorySize(ctx))
+	return result, err
 }
 
 func invokeCapability(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]byte, error) {

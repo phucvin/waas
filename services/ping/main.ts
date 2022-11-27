@@ -33,6 +33,8 @@ function ping(counts: karmem.Slice<u8>): Result<Uint8Array> {
   }
 
   let newCounts = new Uint8Array(counts.length + 1);
+  // let hole = new Uint8Array(9000000);
+  // newCounts[0] = hole[10000];
   newCounts[0] = counts[0] == 0 ? counts[0] : (counts[0] - 1);
   for (let i = 0; i < counts.length; i++) {
     newCounts[i + 1] = counts[i];
