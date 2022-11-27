@@ -18,3 +18,6 @@ go run cmd/test02/main.go --n=100
 go build -o bin/test02 cmd/test02/main.go
 
 for run in {1..10000}; do bin/test02 --n=100; done
+
+Notes:
+* WebAssembly Component Model (https://github.com/WebAssembly/component-model) probably has the same goal.
