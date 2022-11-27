@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/wapc/wapc-go"
-	"github.com/wapc/wapc-go/engines/wasmtime"
+	"github.com/wapc/wapc-go/engines/wazero"
 	"karmem.org/golang"
 
 	waaskm "waas/km"
@@ -87,7 +87,7 @@ func main() {
 	}
 	fmt.Printf("Starting WAAS server managedLocations=%v port=%d\n", managedLocations, *portFlag)
 
-	engine = wasmtime.Engine()
+	engine = wazero.Engine()
 	resetModules()
 
 	fmt.Println("loading modules")
