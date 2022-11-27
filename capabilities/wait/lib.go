@@ -3,10 +3,10 @@ package wait
 import (
 	"encoding/binary"
 	"fmt"
-	"time"
 	"sync"
 	"sync/atomic"
-	
+	"time"
+
 	"karmem.org/golang"
 	waaskm "waas/km"
 )
@@ -21,7 +21,7 @@ func Reset() {
 
 func Handle(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]byte, error) {
 	payload := inv.Payload(kmReader)
-	if (len(payload) != 4) {
+	if len(payload) != 4 {
 		return nil, fmt.Errorf("invalid payload size for _wait")
 	}
 	milliseconds := binary.LittleEndian.Uint32(payload)
@@ -31,7 +31,7 @@ func Handle(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]byte, erro
 
 func HandleAsync(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]byte, error) {
 	payload := inv.Payload(kmReader)
-	if (len(payload) != 4) {
+	if len(payload) != 4 {
 		return nil, fmt.Errorf("invalid payload size for _wait")
 	}
 	milliseconds := binary.LittleEndian.Uint32(payload)
@@ -42,18 +42,18 @@ func HandleAsync(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]byte,
 		wg.Done()
 	}()
 	token := atomic.AddUint64(&nextToken, 1)
-	if token % 5000 == 0 {
+	if token%5000 == 0 {
 		fmt.Printf("wait token reached %d\n", token)
 	}
 	tokenMap.Store(token, &wg)
 	tokenBytes := make([]byte, 8)
-    binary.LittleEndian.PutUint64(tokenBytes, token)
+	binary.LittleEndian.PutUint64(tokenBytes, token)
 	return tokenBytes, nil
 }
 
 func HandleAwait(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]byte, error) {
 	token := binary.LittleEndian.Uint64(inv.Payload(kmReader))
-	if token % 5000 == 0 {
+	if token%5000 == 0 {
 		fmt.Printf("awaiting token %d\n", token)
 	}
 	wg, ok := tokenMap.LoadAndDelete(token)

@@ -107,7 +107,7 @@ func invokeCapitalize(str string) (string, error) {
 
 func invokeWait(milliseconds uint32) error {
 	millisecondsBytes := make([]byte, 4)
-    binary.LittleEndian.PutUint32(millisecondsBytes, milliseconds)
+	binary.LittleEndian.PutUint32(millisecondsBytes, milliseconds)
 	inv := waaskm.Invocation{
 		Source: waaskm.Source{
 			Name:     "hello",
@@ -123,7 +123,7 @@ func invokeWait(milliseconds uint32) error {
 	kmWriter.Reset()
 	_, err := inv.WriteAsRoot(kmWriter)
 	if err != nil {
-		return  err
+		return err
 	}
 	invBytes := kmWriter.Bytes()
 
@@ -133,7 +133,7 @@ func invokeWait(milliseconds uint32) error {
 
 func asyncWait(milliseconds uint32) ([]byte, error) {
 	millisecondsBytes := make([]byte, 4)
-    binary.LittleEndian.PutUint32(millisecondsBytes, milliseconds)
+	binary.LittleEndian.PutUint32(millisecondsBytes, milliseconds)
 	inv := waaskm.Invocation{
 		Source: waaskm.Source{
 			Name:     "hello",
@@ -149,7 +149,7 @@ func asyncWait(milliseconds uint32) ([]byte, error) {
 	kmWriter.Reset()
 	_, err := inv.WriteAsRoot(kmWriter)
 	if err != nil {
-		return  nil, err
+		return nil, err
 	}
 	invBytes := kmWriter.Bytes()
 
@@ -173,7 +173,7 @@ func awaitWait(token []byte) ([]byte, error) {
 	kmWriter.Reset()
 	_, err := inv.WriteAsRoot(kmWriter)
 	if err != nil {
-		return  nil, err
+		return nil, err
 	}
 	invBytes := kmWriter.Bytes()
 

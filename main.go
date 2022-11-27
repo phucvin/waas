@@ -33,7 +33,7 @@ var managedLocations []string
 func resetModules() {
 	// Reset capabilities first
 	wait.Reset()
-	
+
 	func() {
 		moduleMapMutex.RLock()
 		defer moduleMapMutex.RUnlock()
@@ -129,7 +129,7 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 
 	destinationName := inv.Destination(kmReader).Name(kmReader)
 	destinationLocation := inv.Destination(kmReader).Location(kmReader)
-	if (strings.HasPrefix(destinationName, "_")) {
+	if strings.HasPrefix(destinationName, "_") {
 		if destinationLocation != "anywhere" {
 			return nil, fmt.Errorf("capability '%s' location must be 'anywhere'", destinationName)
 		}
@@ -167,7 +167,7 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 
 func invokeCapability(kmReader *karmem.Reader, inv *waaskm.InvocationViewer) ([]byte, error) {
 	capabilityName := inv.Destination(kmReader).Name(kmReader)
-	switch (capabilityName) {
+	switch capabilityName {
 	case "_wait":
 		return wait.Handle(kmReader, inv)
 	case "_async_wait":
