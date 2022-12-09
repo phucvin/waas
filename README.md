@@ -29,3 +29,6 @@ for run in {1..10000}; do bin/test02 --n=100; done
 
 Notes:
 * WebAssembly Component Model (https://github.com/WebAssembly/component-model) probably has the same goal.
+
+TODOs:
+* Test multi region rerouting with Tailscale
