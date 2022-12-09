@@ -156,6 +156,7 @@ func invoke(ctx context.Context, invBytes []byte) ([]byte, error) {
 	module, err := getModule(moduleName)
 	check(err)
 	instance, err := module.Instantiate(ctx)
+	defer instance.Close(ctx)
 	check(err)
 
 	// fmt.Printf("instance memory bytes before invoking: %d\n", instance.MemorySize(ctx))
