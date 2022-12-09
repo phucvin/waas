@@ -66,7 +66,7 @@ func hello(name string) (string, error) {
 		return "", err
 	}
 	// Format the message.
-	msg := fmt.Sprintf("Hello, %s", capitalized)
+	msg := fmt.Sprintf("Hello, %s (from %v)", capitalized, managedScopes)
 
 	for i := 0; i < len(waitTokens); i += 1 {
 		_, err := awaitWait(waitTokens[i])
