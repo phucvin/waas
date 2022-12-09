@@ -7,6 +7,14 @@ sudo dpkg -i tinygo_0.26.0_amd64.deb
 
 npm i -g assemblyscript
 
+cd km && make && cd ..
+
+cd services/hello && make && cd ..
+
+cd services/capitalize && make && cd ..
+
+cd services/ping && make && cd ..
+
 go run main.go --locations=us-west1 --port=8081
 
 go run main.go --locations=us-east1 --port=8082

@@ -3,3 +3,4 @@
 *_generated.ts
 node_modules
 /bin
+*.deb
