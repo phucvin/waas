@@ -32,3 +32,4 @@ Notes:
 
 TODOs:
 * Test multi region rerouting with Tailscale
+* Authenticate & Authorize service-to-service calls (somewhat similar to mTLS)
